@@ -22,18 +22,20 @@ namespace ToDoApi.Controllers
 
         // GET: api/ToDoItems
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ToDoItem>>> GetToDoItems()
+        public async Task<ActionResult<IEnumerable<ToDoItemDTO>>> GetToDoItems()
         {
           if (_context.ToDoItems == null)
           {
               return NotFound();
           }
-            return await _context.ToDoItems.ToListAsync();
+            return await _context.ToDoItems
+                .Select(x => ItemToDTO(x))
+                .ToListAsync();
         }
 
         // GET: api/ToDoItems/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ToDoItem>> GetToDoItem(long id)
+        public async Task<ActionResult<ToDoItemDTO>> GetToDoItem(long id)
         {
           if (_context.ToDoItems == null)
           {
@@ -46,20 +48,20 @@ namespace ToDoApi.Controllers
                 return NotFound();
             }
 
-            return toDoItem;
+            return ItemToDTO(toDoItem);
         }
 
         // PUT: api/ToDoItems/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutToDoItem(long id, ToDoItem toDoItem)
+        public async Task<IActionResult> PutToDoItem(long id, ToDoItemDTO toDoDTO)
         {
-            if (id != toDoItem.Id)
+            if (id != toDoDTO.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(toDoItem).State = EntityState.Modified;
+            _context.Entry(toDoDTO).State = EntityState.Modified;
 
             try
             {
@@ -83,13 +85,19 @@ namespace ToDoApi.Controllers
         // POST: api/ToDoItems
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<ToDoItem>> PostToDoItem(ToDoItem toDoItem)
+        public async Task<ActionResult<ToDoItemDTO>> PostToDoItem(ToDoItemDTO toDoDTO)
         {
+            var toDoItem = new ToDoItem
+            {
+                IsComplete = toDoDTO.IsComplete,
+                Name = toDoDTO.Name
+            };
+
             _context.ToDoItems.Add(toDoItem);
             await _context.SaveChangesAsync();
 
             //    return CreatedAtAction("GetTodoItem", new { id = todoItem.Id }, todoItem);
-            return CreatedAtAction(nameof(GetToDoItem), new { id = toDoItem.Id }, toDoItem);
+            return CreatedAtAction(nameof(GetToDoItem), new { id = toDoItem.Id }, ItemToDTO(toDoItem));
         }
 
         // DELETE: api/ToDoItems/5
@@ -116,5 +124,13 @@ namespace ToDoApi.Controllers
         {
             return (_context.ToDoItems?.Any(e => e.Id == id)).GetValueOrDefault();
         }
+
+        private static ToDoItemDTO ItemToDTO(ToDoItem toDoItem) =>
+            new ToDoItemDTO
+            {
+                Id = toDoItem.Id,
+                Name = toDoItem.Name,
+                IsComplete = toDoItem.IsComplete
+            };
     }
 }
