@@ -6,6 +6,7 @@ Create a web API
 
 # Overview
 - Creates the following API: 
+
 | API | Description | Request body | Response body |
 | ------------- | ------------- | ------------- | ------------- |
 | GET /api/ToDoItems | Get all to-do items | None | Array of to-do items |
